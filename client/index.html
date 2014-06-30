@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-yolo="swag">
+<head>
+	<meta charset="utf-8" />
+	<title>chat</title>
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,300|Inconsolata" type="text/css" />
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" type="text/css" />
+	<link rel="stylesheet" href="assets/css/layout.css" type="text/css" />
+</head>
+<body>
+	<div class="container login-window-container">
+		<div class="row">
+			<div class="col-md-offset-4 col-md-4">
+				<form class="login-form" autocomplete="off">
+					<div class="input-group input-group-sm">
+						<input class="form-control" name="username" placeholder="Username" />
+						<span class="input-group-btn">
+							<button type="submit" class="btn btn-default">Login</button>
+						</span>
+					</div>
+				</form>
+				<div class="error"></div>
+			</div>
+		</div>
+	</div>
+	<div class="container chat-window-container">
+		<div class="row">
+			<div class="col-md-9">
+				<div class="panel">
+					<div class="chatbox">
+						<div class="chats"></div>
+						<form class="composer">
+							<div class="input-group input-group-sm">
+								<input class="form-control" name="msg" placeholder="Type a message..." />
+								<span class="input-group-btn">
+									<button type="submit" class="btn btn-default">Send</button>
+								</span>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="panel sidebar">
+					<button class="btn btn-danger btn-block logout"><span class="glyphicon glyphicon-off"></span> Disconnect</button>
+					<hr />
+					<small style="color: #999;">
+							Hint: Use the command <strong>help</strong> to see chat commands.
+					</small>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="assets/js/chat-client.js"></script>
+</body>
+</html>

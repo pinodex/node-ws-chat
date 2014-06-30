@@ -1,0 +1,143 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    background: #111 url('../img/bg.png');
+    font-family: 'Open Sans', sans-serif;
+}
+
+.login-window-container {
+    padding-top: 100px;
+}
+
+.login-form input,
+.login-form input:hover,
+.login-form input:focus,
+.login-form button,
+.login-form button:hover,
+.login-form button:active,
+.login-form button:focus {
+    background: #222;
+    box-shadow: none;
+    border: 1px solid #555;
+    color: #eee;
+}
+
+.login-window-container .error {
+    margin-top: 10px;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    display: none;
+}
+
+.chat-window-container {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    display: none;
+}
+
+.panel {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+}
+
+.chatbox {
+
+}
+
+.chats {
+    height: 500px;
+    padding: 10px;
+    font-family: 'Inconsolata', 'Courier New';
+    font-size: 14px;
+    white-space: pre;
+    color: #fff;
+    overflow-y: scroll;
+}
+
+.chats::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chats::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chats::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.msg {
+    overflow: hidden;
+}
+
+.msg.me {
+    color: #ccc;
+}
+
+.msg.system {
+    color: #ddd;
+}
+
+.msg .time {
+    color: #777;
+}
+
+.msg .nick {
+    font-weight: bold;
+    width: auto;
+    float: left;
+}
+
+.msg .message {
+    overflow: hidden;
+    display: block;
+    word-wrap: break-word;
+}
+
+.composer {
+    border-top: 1px solid #222;
+    padding: 5px;
+}
+
+.composer input,
+.composer input[disabled],
+.composer button,
+.composer input:focus,
+.composer button:focus,
+.composer button:hover {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    color: #fff;
+    outline: none;
+}
+
+.composer button,
+.composer button:focus,
+.composer button:hover,
+.composer button:active,
+.composer button[disabled] {
+    background: transparent;
+    border-left: 1px solid #444;
+    color: #999;
+}
+
+.composer input[disabled] {
+    color: #777;
+}
+
+.composer button[disabled] {
+    color: #555;
+}
+
+.sidebar {
+    padding: 10px;
+}
+
+.sidebar hr {
+    border-color: #444;
+}
