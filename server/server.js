@@ -217,7 +217,7 @@ WebSocket.on('connection', function(ws) {
     ws.on('close', function() {
         var user = objectSearch(users, ws);
 
-        if (typeof objectSearch(users, ws) === 'undefined') {
+        if (typeof user === 'undefined') {
             return;
         }
 

@@ -22,8 +22,8 @@ var commands = {
                 '',
                 'SUDO commands:',
                 '<strong>/kick &lt;username&gt;</strong> - kick the user out.',
-                '<strong>/ban &lt;domain&gt;</strong> - ban username',
-                '<strong>/unban &lt;domain&gt;</strong> - unban username',
+                '<strong>/ban &lt;username&gt;</strong> - ban username',
+                '<strong>/unban &lt;username&gt;</strong> - unban username',
                 '<strong>/sudoer &lt;add|remove&gt; &lt;username&gt; &lt;password&gt;</strong> - add/remove sudoer',
                 '<strong>/origin &lt;add|remove&gt; &lt;domain&gt;</strong> - add/remove origin domains',
                 '<strong>/changepassword &lt;old password&gt; &lt;new password&gt; - change password.'
