@@ -1,172 +1,251 @@
-/*! by @pinodex */
+/**
+ * Node.js WebSocket Chat System
+ * By @pinodex.
+ */
+
+var Util = require("util");
+var URL = require('url');
+var Crypto = require('crypto');
 
 var WebSocketServer = require('ws').Server;
 var WebSocket = new WebSocketServer({
-	port: 8000
+    port: 8000
 });
 
-var Commands = require('./commands.js').Commands;
+var configuration = require('./configuration.js');
+var commands = require('./commands.js');
 
 var users = {};
-var motd = [
-	'll    ll  llllllll  ll        ll      llllll  ',
-	'll    ll  ll        ll        ll     ll    ll ',
-	'llllllll  lllll     ll        ll    ll      ll',
-	'll    ll  ll        ll        ll     ll    ll ',
-	'll    ll  llllllll  llllllll  llllll  llllll  ',
-	'',
-	'This is an example of WebSocket chat system.',
-	'Server time: ' + new Date()
-];
 
 WebSocket.broadcast = function(data, client) {
-	if(typeof client == 'undefined'){
-		var client = null;
-	}
+    if (typeof client == 'undefined'){
+        var client = null;
+    }
 
-	for(var i in this.clients) {
-		if(this.clients[i] != client) {
-			this.clients[i].send(data);
-		}
-	};
+    for (var i in this.clients) {
+        if (this.clients[i] != client) {
+            this.clients[i].send(data);
+        }
+    };
 };
 
 objectSearch = function(object, value) {
-	for(var prop in object) {
-		if(object.hasOwnProperty(prop)) {
-			 if(object[prop] === value) {
-				 return prop;
-			 }
-		}
-	}
+    for (var prop in object) {
+        if (object.hasOwnProperty(prop)) {
+             if (object[prop] === value) {
+                 return prop;
+             }
+        }
+    }
 };
 
 WebSocket.on('connection', function(ws) {
 
-	console.log('[DEBUG] Client connected');
+    var originDomain = URL.parse(ws.upgradeReq.headers.origin).hostname;
 
-	ws.on('message', function(message) {
-		console.log('[DEBUG] Message received: %s', message);
+    if (configuration.origins.indexOf(originDomain) < 0) {
+        ws.send(JSON.stringify({
+            type: 'system',
+            message: 'Connection from unknown source refused.'
+        }));
 
-		var msg = JSON.parse(message);
+        ws.close();
+        return;
+    }
 
-		if(msg.action == 'login'){
-			var name = msg.name;
+    ws.on('message', function(message) {
+        var msg = JSON.parse(message);
 
-			if(name.replace(/\s+/, '').length == 0 || /^\w+$/.test(name) === false){
-				ws.send(JSON.stringify({
-					type: 'system',
-					message: 'Only alphanumeric characters and underscores are allowed for names.'
-				}));
+        if (!('action' in msg)) {
+            ws.close();
+            return;
+        }
 
-				ws.close();
-				return;
-			}
+        if (msg.action == 'login') {
+            if (typeof objectSearch(users, ws) != 'undefined') {
+                ws.close();
+                return;
+            }
 
-			if(name.toLowerCase() == 'server') {
-				ws.send(JSON.stringify({
-					type: 'system',
-					message: name . ' is not allowed.'
-				}));
+            var name = msg.name;
 
-				ws.close();
-				return;
-			}
+            if (name.replace(/\s+/, '').length == 0 || /^\w+$/.test(name) === false) {
+                ws.send(JSON.stringify({
+                    type: 'system',
+                    message: 'Only alphanumeric characters and underscores are allowed for names.'
+                }));
 
-			if(name in users){
-				ws.send(JSON.stringify({
-					type: 'system',
-					message: 'The username <strong>' + name + '</strong> already logged in.'
-				}));
+                ws.close();
+                return;
+            }
 
-				ws.close();
-				return;
-			}
+            if(name.toLowerCase() == 'server') {
+                ws.send(JSON.stringify({
+                    type: 'system',
+                    message: name . ' is not allowed.'
+                }));
 
-			ws.send(JSON.stringify({
-				type: 'system',
-				message: 'Connection established.'
-			}));
+                ws.close();
+                return;
+            }
 
-			ws.send(JSON.stringify({
-				type: 'system',
-				message: motd
-			}));
+            if (configuration.bans.indexOf(name) > -1) {
+                ws.send(JSON.stringify({
+                    type: 'system',
+                    message: 'Your username <strong>' + name + '</strong> is banned.'
+                }));
 
-			users[name] = ws;
+                ws.close();
+                return;
+            }
 
-			ws.send(JSON.stringify({
-				type: 'system',
-				message: 'Hello there <strong>' + name + '</strong>!'
-			}));
+            if (name in users) {
+                ws.send(JSON.stringify({
+                    type: 'system',
+                    message: 'The username <strong>' + name + '</strong> already logged in.'
+                }));
 
-			WebSocket.broadcast(JSON.stringify({
-				type: 'system',
-				message: '<strong>' + name + '</strong> joined the chat.'
-			}), ws, true);
+                ws.close();
+                return;
+            }
 
-			return;
-		}
+            if (name in configuration.sudoers && (typeof msg.pass == 'undefined' || msg.pass === null)) {
+                ws.send(JSON.stringify({
+                    type: 'system',
+                    message: 'This username is restricted. Please login with <strong>username:password</strong>'
+                }));
 
-		if (typeof objectSearch(users, ws) === 'undefined') {
-			return;
-		}
-		
-		if(msg.message.charAt(0) === '/'){
-			console.log('COMMAND');
+                ws.close();
+                return;
+            }
 
-			var command = msg.message.split(' ');
-			var commandString = command[0].slice(1);
+            users[name] = ws;
+            users[name]['sudo'] = false;
+            ws['sudo'] = false;
 
-			if(!Commands.hasOwnProperty(commandString)){
-				ws.send(JSON.stringify({
-					type: 'system',
-					message: 'Command not found. Type <strong>/help</strong> for the list of commands.'
-				}));
+            if ((typeof msg.pass != 'undefined' || msg.pass !== null) && name in configuration.sudoers) {
+                if (configuration.sudoers[name] != Crypto.createHash('sha1').update(msg.pass).digest('hex')) {
+                    ws.send(JSON.stringify({
+                        type: 'system',
+                        message: 'Invalid password for <strong>' + name + '</strong>.'
+                    }));
 
-				return;
-			}
+                    ws.close();
+                    return;
+                }
 
-			var arguments = command.splice(0, 1);
-			var output = Commands[commandString](JSON.stringify(command), objectSearch(users, ws), ws);
+                users[name]['sudo'] = true;
+                ws['sudo'] = true;
+            }
 
-			if (typeof output == 'undefined') {
-				return;
-			}
+            ws['name'] = msg.name;
 
-			ws.send(JSON.stringify({
-				type: 'system',
-				message: output
-			}));
+            ws.send(JSON.stringify({
+                type: 'auth',
+                name: msg.name
+            }));
 
-			return;
-		}
+            ws.send(JSON.stringify({
+                type: 'system',
+                message: 'Connection established.'
+            }));
 
-		WebSocket.broadcast(JSON.stringify({
-			type: 'message',
-			name: msg.name,
-			message: msg.message
-		}), ws);
-	});
+            ws.send(JSON.stringify({
+                type: 'system',
+                message: configuration.motd || 'Default MOTD.'
+            }));
 
-	ws.on('error', function(error) {
-		console.log('[ERROR] %s', error);
-		ws.close();
-	});
+            ws.send(JSON.stringify({
+                type: 'system',
+                message: 'Hello there <strong>' + name + '</strong>!'
+            }));
 
-	ws.on('close', function() {
-		var user = objectSearch(users, ws);
+            WebSocket.broadcast(JSON.stringify({
+                type: 'system',
+                message: '<strong>' + name + '</strong> joined the chat.'
+            }), ws);
 
-		if(!user){
-			return;
-		}
+            return;
+        }
 
-		WebSocket.broadcast(JSON.stringify({
-			type: 'system',
-			message: '<strong>' + user + '</strong> has been disconnected.'
-		}), ws);
+        if (typeof objectSearch(users, ws) === 'undefined') {
+            return;
+        }
 
-		delete users[user];
-	});
+        if (!('message' in msg)) {
+            ws.close();
+            return;
+        }
+
+        if (msg.message.charAt(0) === '/') {
+            var command = msg.message.split(' ');
+            var commandString = command[0].slice(1);
+
+            ws.send(JSON.stringify({
+                sudoer: ws.sudo,
+                type: 'message',
+                name: ws.name,
+                message: msg.message
+            }));
+
+            if (!commands.hasOwnProperty(commandString)) {
+                ws.send(JSON.stringify({
+                    type: 'system',
+                    message: 'Command not found. Type <strong>/help</strong> for the list of commands.'
+                }));
+
+                return;
+            }
+
+            var arguments = command.splice(0, 1);
+            var output = commands[commandString](JSON.stringify(command), ws);
+
+            if (typeof output == 'undefined') {
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: 'system',
+                message: output
+            }));
+
+            return;
+        }
+
+        WebSocket.broadcast(JSON.stringify({
+            sudoer: ws.sudo,
+            type: 'message',
+            name: ws.name,
+            message: msg.message
+        }));
+    });
+
+    ws.on('error', function(error) {
+        console.log('[ERROR] %s', error);
+        ws.close();
+    });
+
+    ws.on('close', function() {
+        var user = objectSearch(users, ws);
+
+        if (typeof objectSearch(users, ws) === 'undefined') {
+            return;
+        }
+
+        if (typeof users[user].kicked == 'undefined') {
+            WebSocket.broadcast(JSON.stringify({
+                type: 'system',
+                message: '<strong>' + user + '</strong> has been disconnected.'
+            }), ws);
+        }
+
+        delete users[user];
+    });
 
 });
+
+exports.users = users;
+exports.Crypto = Crypto;
+exports.broadcast = function(data, ws) {
+    WebSocket.broadcast(JSON.stringify(data), ws);
+}

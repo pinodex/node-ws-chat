@@ -20,7 +20,7 @@ $(function(){
 
         if (name.toLowerCase() == 'server') {
             $('.login-window-container .error').html(name + ' is not allowed.').show();
-            return;
+            return
         }
 
         document.user = {
@@ -150,7 +150,7 @@ var websocket = {
     connect: function() {
         if (this.conn == null) {
             chat.add(chat.system, 'Connecting to server...', chat.system);
-            this.conn = new WebSocket('ws://localhost:8080');
+            this.conn = new WebSocket('ws://localhost:8000');
         }
 
         this.conn.onopen = function() {
