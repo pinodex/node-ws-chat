@@ -18,9 +18,9 @@ $(function(){
             return;
         }
 
-        if (name == 'SERVER' || name == 'server') {
-            $('.login-window-container .error').html(name + ' is a reserved username.').show();
-            return
+        if (name.toLowerCase() == 'server') {
+            $('.login-window-container .error').html(name + ' is not allowed.').show();
+            return;
         }
 
         document.user = {
