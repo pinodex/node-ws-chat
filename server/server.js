@@ -82,7 +82,7 @@ WebSocket.on('connection', function(ws) {
             if(name.toLowerCase() == 'server') {
                 ws.send(JSON.stringify({
                     type: 'system',
-                    message: name . ' is not allowed.'
+                    message: name + ' is not allowed.'
                 }));
 
                 ws.close();
